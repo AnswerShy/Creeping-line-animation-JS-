@@ -1,11 +1,11 @@
 const svgNS = "http://www.w3.org/2000/svg";
 const rootStyles = getComputedStyle(document.documentElement);
-const textColor = rootStyles.getPropertyValue('--textProcentTransp').trim();
+var textColor = rootStyles.getPropertyValue('--textProcentTransp').trim();
 var fontSize = 64
 var Speed = 7
 let styleSheet;
 
-function setUpBG (speed, fontsize) {
+function setUpBG (speed, fontsize, textcolor) {
     if (document.styleSheets.length === 0) {
         const style = document.createElement('style');
         document.head.appendChild(style);
@@ -14,12 +14,9 @@ function setUpBG (speed, fontsize) {
     else {
       styleSheet = document.styleSheets[0];
     }
-    if(fontsize) {
-        fontSize = fontsize
-    }
-    if (speed) {
-        Speed = speed
-    }
+    fontsize ? fontSize = fontsize : console.log("Font size set by default")
+    speed ? Speed = speed : console.log("Speed set by default")
+    textcolor ? textColor = textcolor : console.log("Color by default")
     try {
         styleSheet.insertRule(`.ticker-row {z-index: -1; background-repeat: repeat; animation-duration: ${Speed}s; animation-timing-function: linear; animation-iteration-count: infinite; position: absolute; height: 100%; width: 100%; }`, styleSheet.cssRules.length);
         styleSheet.insertRule('.ticker-row:nth-child(2n) { animation-name: ticker-left; }', styleSheet.cssRules.length);
@@ -31,11 +28,12 @@ function setUpBG (speed, fontsize) {
 }
 
 class createBackground {
-    constructor (textContent, domElement, speed, fontsize) {
-        this.textContent = textContent
-        this.domElement = domElement
-        this.speed = speed
-        this.fontsize = fontsize
+    constructor (textContent, domElement, speed, fontsize, textcolor) {
+        this.textContent = textContent;
+        this.domElement = domElement;
+        this.speed = speed;
+        this.fontsize = fontsize;
+        this.textcolor = textcolor;
     }
 
     createKeyframes(name, from, to) {
@@ -77,7 +75,7 @@ class createBackground {
 
         const svgString = new XMLSerializer().serializeToString(svg);
         const svgBase64 = `data:image/svg+xml;base64,${btoa(svgString)}`;
-        console.log(widthOfPos)
+
         return [svgBase64, widthOfPos, bbox.height + 50];
     }
 
@@ -102,8 +100,8 @@ class createBackground {
         domElement.appendChild(tickerRow)
     }
 
-    start(textContent, domElement, speed, fontsize){
-        setUpBG(speed, fontsize)
+    start(textContent, domElement, speed, fontsize, textcolor){
+        setUpBG(speed, fontsize, textcolor)
         for(var i = 0; i < 2; i++){
             this.createRow(textContent, i, domElement)
         }
