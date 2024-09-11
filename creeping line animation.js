@@ -3,9 +3,10 @@ const rootStyles = getComputedStyle(document.documentElement);
 var textColor = rootStyles.getPropertyValue('--textProcentTransp').trim();
 var fontSize = 64
 var Speed = 7
+var isBlock = 'absolute'
 let styleSheet;
 
-function setUpBG (speed, fontsize, textcolor) {
+function setUpBG (speed, fontsize, textcolor, oneline) {
     if (document.styleSheets.length === 0) {
         const style = document.createElement('style');
         document.head.appendChild(style);
@@ -14,11 +15,12 @@ function setUpBG (speed, fontsize, textcolor) {
     else {
       styleSheet = document.styleSheets[0];
     }
+    oneline ? isBlock = 'block' : console.log("one line")
     fontsize ? fontSize = fontsize : console.log("Font size set by default")
     speed ? Speed = speed : console.log("Speed set by default")
     textcolor ? textColor = textcolor : console.log("Color by default")
     try {
-        styleSheet.insertRule(`.ticker-row {z-index: -1; background-repeat: repeat; animation-duration: ${Speed}s; animation-timing-function: linear; animation-iteration-count: infinite; position: absolute; height: 100%; width: 100%; }`, styleSheet.cssRules.length);
+        styleSheet.insertRule(`.ticker-row {z-index: -1; background-repeat: repeat; animation-duration: ${Speed}s; animation-timing-function: linear; animation-iteration-count: infinite; position: ${isBlock}; height: 100%; width: 100%; }`, styleSheet.cssRules.length);
         styleSheet.insertRule('.ticker-row:nth-child(2n) { animation-name: ticker-left; }', styleSheet.cssRules.length);
         styleSheet.insertRule('.ticker-row:nth-child(odd) { animation-name: ticker-right; }', styleSheet.cssRules.length);
     } 
@@ -100,10 +102,16 @@ class createBackground {
         domElement.appendChild(tickerRow)
     }
 
-    start(textContent, domElement, speed, fontsize, textcolor){
-        setUpBG(speed, fontsize, textcolor)
-        for(var i = 0; i < 2; i++){
+    start(textContent, domElement, speed, fontsize, textcolor, oneline){
+        setUpBG(speed, fontsize, textcolor, oneline)
+        if(oneline) {
             this.createRow(textContent, i, domElement)
         }
+        else {
+            for(var i = 0; i < 2; i++){
+                this.createRow(textContent, i, domElement)
+            }
+        }
+        
     }
 }
