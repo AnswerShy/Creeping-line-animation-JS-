@@ -15,10 +15,10 @@ function setUpBG (speed, fontsize, textcolor, oneline) {
     else {
       styleSheet = document.styleSheets[0];
     }
-    oneline ? isBlock = 'block' : console.log("one line")
-    fontsize ? fontSize = fontsize : console.log("Font size set by default")
-    speed ? Speed = speed : console.log("Speed set by default")
-    textcolor ? textColor = textcolor : console.log("Color by default")
+    isBlock = oneline ? 'block' : 'absolute'
+    fontSize = fontsize ? fontsize : 64
+    Speed = speed ? speed : 7
+    textColor = textcolor ? textcolor : rootStyles.getPropertyValue('--textProcentTransp').trim();
     try {
         styleSheet.insertRule(`.ticker-row {z-index: -1; background-repeat: repeat; animation-duration: ${Speed}s; animation-timing-function: linear; animation-iteration-count: infinite; position: ${isBlock}; height: 100%; width: 100%; }`, styleSheet.cssRules.length);
         styleSheet.insertRule('.ticker-row:nth-child(2n) { animation-name: ticker-left; }', styleSheet.cssRules.length);
@@ -29,7 +29,7 @@ function setUpBG (speed, fontsize, textcolor, oneline) {
     }
 }
 
-class createBackground {
+export default class createBackground {
     constructor (textContent, domElement, speed, fontsize, textcolor) {
         this.textContent = textContent;
         this.domElement = domElement;
@@ -93,13 +93,17 @@ class createBackground {
         this.createKeyframes(animationName, fromPosition, toPosition);
 
 
-        tickerRow.style.top = `${(svgInfo[2]*index)/2}px`;
+        tickerRow.style.top = `-${(svgInfo[2]*index)/2}px`;
         // console.log(`${(svgInfo[2]*index)/2}px`)
         tickerRow.style.backgroundImage = `url('${svgInfo[0]}')`;
         tickerRow.style.animationName = animationName;
 
-
-        domElement.appendChild(tickerRow)
+        try {
+            domElement.appendChild(tickerRow)
+        }
+        catch (e) {
+            console.log(e)
+        }
     }
 
     start(textContent, domElement, speed, fontsize, textcolor, oneline){
