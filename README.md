@@ -8,5 +8,5 @@ Easy creeping line javascript animation
 # How to use it?
 ```
 var createElement = new createBackground()
-createElement.start("text that u want to be on line", ur_DOM_element, speed_in_seconds, size_of_font, color_of_text, isOneLine)
+createElement.start("text that u want to be on line", ur_DOM_element, speed_in_seconds, size_of_font, color_of_text, isOneLine, fontBase64Type)
 ```
