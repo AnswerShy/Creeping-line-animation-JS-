@@ -1,26 +1,22 @@
 const svgNS = "http://www.w3.org/2000/svg";
-const rootStyles = getComputedStyle(document.documentElement);
-var textColor = rootStyles.getPropertyValue('--textProcentTransp').trim();
+var textColor;
 var fontSize = 64
 var Speed = 7
-var isBlock = 'absolute'
+var isBlock = 'fixed'
 let styleSheet;
 
 function setUpBG (speed, fontsize, textcolor, oneline) {
-    if (document.styleSheets.length === 0) {
-        const style = document.createElement('style');
-        document.head.appendChild(style);
-        styleSheet = style.sheet;
-    } 
-    else {
-      styleSheet = document.styleSheets[0];
-    }
-    isBlock = oneline ? 'block' : 'absolute'
+    const style = document.createElement('style');
+    document.head.appendChild(style);
+    styleSheet = style.sheet;
+
+    isBlock = oneline ? 'block' : 'fixed'
     fontSize = fontsize ? fontsize : 64
     Speed = speed ? speed : 7
-    textColor = textcolor ? textcolor : rootStyles.getPropertyValue('--textProcentTransp').trim();
+    textColor = textcolor ? textcolor : "rgb(255,0,255, 0.02)";
+    console.log(textColor)
     try {
-        styleSheet.insertRule(`.ticker-row {z-index: -1; background-repeat: repeat; animation-duration: ${Speed}s; animation-timing-function: linear; animation-iteration-count: infinite; position: ${isBlock}; height: 100%; width: 100%; }`, styleSheet.cssRules.length);
+        styleSheet.insertRule(`.ticker-row {z-index: -1; background-repeat: repeat; animation-duration: ${Speed}s; animation-timing-function: linear; animation-iteration-count: infinite; position: ${isBlock}; height: 100%; width: 100%; transition: 1s ease; }`, styleSheet.cssRules.length);
         styleSheet.insertRule('.ticker-row:nth-child(2n) { animation-name: ticker-left; }', styleSheet.cssRules.length);
         styleSheet.insertRule('.ticker-row:nth-child(odd) { animation-name: ticker-right; }', styleSheet.cssRules.length);
     } 
@@ -30,12 +26,13 @@ function setUpBG (speed, fontsize, textcolor, oneline) {
 }
 
 export default class createBackground {
-    constructor (textContent, domElement, speed, fontsize, textcolor) {
+    constructor (textContent, domElement, speed, fontsize, textcolor, fontBase) {
         this.textContent = textContent;
         this.domElement = domElement;
         this.speed = speed;
         this.fontsize = fontsize;
         this.textcolor = textcolor;
+        this.fontBase = fontBase
     }
 
     createKeyframes(name, from, to) {
@@ -52,13 +49,25 @@ export default class createBackground {
         styleSheet.insertRule(keyframes, styleSheet.cssRules.length);
     }
 
-    createSVG(textContent, index) {
+    createSVG(textContent, fontBase) {
         const svg = document.createElementNS(svgNS, "svg");
+        svg.setAttribute("xmlns", svgNS);
+        const defs = document.createElement("defs")
 
+
+        var styleSVG = document.createElement('style');
+
+        defs.appendChild(styleSVG);
+        svg.appendChild(defs)
+        try {
+            styleSVG.textContent = `${fontBase}`;
+        } catch (e) {
+            console.log(e);
+        }
         const text = document.createElementNS(svgNS, "text");
         text.setAttribute("font-size", fontSize);
-        text.setAttribute("font-family", `"Gochi Hand", cursive`)
-        text.setAttribute("fill", textColor);
+        text.setAttribute("fill", `${textColor}`);
+        text.setAttribute("font-family", 'Gochi Hand')
         text.textContent = textContent;
 
         svg.appendChild(text);
@@ -67,53 +76,55 @@ export default class createBackground {
         const bbox = text.getBBox();
         document.body.removeChild(svg);
 
-        var widthOfPos = bbox.width + bbox.width/5
 
-        svg.setAttribute("width", widthOfPos);
-        svg.setAttribute("height", bbox.height + 50); 
+        svg.setAttribute("width", bbox.width);
+        svg.setAttribute("height", bbox.height); 
 
-        text.setAttribute("x", "10");
-        text.setAttribute("y", bbox.height + 10);
+        text.setAttribute("x", "0");
+        text.setAttribute("y", bbox.height/2);
 
         const svgString = new XMLSerializer().serializeToString(svg);
-        const svgBase64 = `data:image/svg+xml;base64,${btoa(svgString)}`;
 
-        return [svgBase64, widthOfPos, bbox.height + 50];
+        const result = `data:image/svg+xml;utf8, ${svgString.toString().replace(/"/g, "'").replace(/\n/g, '').replace(/\t/g, '').replace(/\s{2,}/g, ' ')}`
+        // console.log(result)
+        return ([result, bbox.width, bbox.height]);
     }
 
-    createRow(textContent, index, domElement) {
+    async createRow(textContent, index, domElement, fontBase) {
         const tickerRow = document.createElement('div');
         tickerRow.classList.add('ticker-row');
 
-        var svgInfo = this.createSVG(textContent, index)
+        const svgInfo = await this.createSVG(textContent, fontBase)
 
         const animationName = `ticker-${index}`;
         const fromPosition = '0 0';
         const toPosition = index % 2 === 0 ? `-${svgInfo[1]}px 0` : `${svgInfo[1]}px 0`;
         this.createKeyframes(animationName, fromPosition, toPosition);
-
-
-        tickerRow.style.top = `-${(svgInfo[2]*index)/2}px`;
-        // console.log(`${(svgInfo[2]*index)/2}px`)
-        tickerRow.style.backgroundImage = `url('${svgInfo[0]}')`;
+        
+        tickerRow.style.top = `${(svgInfo[2]*index)/2}px`;
+        tickerRow.style.backgroundImage = `url("${decodeURIComponent(svgInfo[0])}")`;
         tickerRow.style.animationName = animationName;
-
+    
         try {
             domElement.appendChild(tickerRow)
         }
         catch (e) {
             console.log(e)
         }
+
     }
 
-    start(textContent, domElement, speed, fontsize, textcolor, oneline){
+    start(textContent, domElement, speed, fontsize, textcolor, oneline, fontBase){
+        if(document.querySelectorAll(".ticker-row")) {
+            document.querySelectorAll(".ticker-row").forEach(e => e.remove())
+        }
         setUpBG(speed, fontsize, textcolor, oneline)
         if(oneline) {
-            this.createRow(textContent, i, domElement)
+            this.createRow(textContent, 0, domElement, fontBase)
         }
         else {
             for(var i = 0; i < 2; i++){
-                this.createRow(textContent, i, domElement)
+            this.createRow(textContent, i, domElement, fontBase)
             }
         }
         
